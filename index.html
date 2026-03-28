@@ -1,6 +1,91 @@
 <!DOCTYPE html>
-<html>
+<html lang="fi">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🐶 Ruokinta</title>
+
+<style>
+body {
+  background:#111;
+  color:white;
+  text-align:center;
+  font-family:Arial;
+  margin:0;
+}
+
+h1 { margin:20px; }
+
+button {
+  width:90%;
+  height:180px;
+  font-size:40px;
+  margin:15px;
+  border-radius:25px;
+  border:none;
+}
+
+.red { background:#d9534f; }
+.green { background:#5cb85c; }
+</style>
+</head>
+
 <body>
-<h1>🐶 Koiran ruokinta toimii!</h1>
+
+<h1>🐶 RUOKINTA</h1>
+
+<button id="morning">AAMU</button>
+<button id="evening">ILTA</button>
+
+<script>
+// 🔁 haetaan tallennettu tila
+let data = JSON.parse(localStorage.getItem("feeding")) || {
+  morning:false,
+  evening:false,
+  date: new Date().toDateString()
+};
+
+// 🔄 reset jos uusi päivä
+if (data.date !== new Date().toDateString()) {
+  data = { morning:false, evening:false, date:new Date().toDateString() };
+}
+
+// UI päivitys
+function update() {
+  morning.className = data.morning ? "green" : "red";
+  evening.className = data.evening ? "green" : "red";
+}
+
+// tallennus
+function save() {
+  localStorage.setItem("feeding", JSON.stringify(data));
+}
+
+// toggle
+morning.onclick = () => {
+  data.morning = !data.morning;
+  save();
+  update();
+};
+
+evening.onclick = () => {
+  data.evening = !data.evening;
+  save();
+  update();
+};
+
+// 🔔 klo 18 muistutus
+setInterval(() => {
+  const now = new Date();
+  if (now.getHours() === 18 && now.getMinutes() === 0) {
+    if (!data.morning || !data.evening) {
+      alert("RUOKINTA!");
+    }
+  }
+}, 60000);
+
+// käynnistys
+update();
+</script>
+
 </body>
 </html>
