@@ -13,7 +13,15 @@ body {
   margin:0;
 }
 
-h1 { margin:20px; }
+h1 { 
+  margin:10px;
+  font-size:40px;
+}
+
+#dog {
+  width:300px;      /* 2× koko */
+  margin-top:5px;
+}
 
 button {
   width:90%;
@@ -33,16 +41,18 @@ button {
 
 <h1>🐶 RUOKINTA</h1>
 
+<!-- ✅ KOIRAKUVA LISÄTTY -->
+<img id="dog" src="https://akoljo77.github.io/koira-ruokinta/koira.png" alt="koira">
+
 <button id="morning">AAMU</button>
 <button id="evening">ILTA</button>
 
 <!-- ✅ Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getDatabase, ref, set, get, onValue } 
+import { getDatabase, ref, set, onValue }
   from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
-// ✅ Your firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDaPyc0p0Mqqt6zY4ZcI-dk2PpL4AMnw9g",
   authDomain: "koira-ruokinta.firebaseapp.com",
@@ -54,21 +64,17 @@ const firebaseConfig = {
   measurementId: "G-18BCRT569S"
 };
 
-// ✅ Init Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// ✅ References in database
 const dbRef = ref(db, "feeding");
 
-// ✅ Local state (mirror from Firebase)
 let feeding = {
   morning: false,
   evening: false,
   date: new Date().toDateString()
 };
 
-// ✅ Update button colours
 function updateUI() {
   document.getElementById("morning").className =
       feeding.morning ? "green" : "red";
@@ -77,21 +83,17 @@ function updateUI() {
       feeding.evening ? "green" : "red";
 }
 
-// ✅ Send state to Firebase
 function saveToFirebase() {
   set(dbRef, feeding);
 }
 
-// ✅ Sync from Firebase (REALTIME!)
 onValue(dbRef, (snapshot) => {
   const val = snapshot.val();
   if (!val) return;
-
   feeding = val;
   updateUI();
 });
 
-// ✅ Button handlers
 morning.onclick = () => {
   feeding.morning = !feeding.morning;
   saveToFirebase();
@@ -102,11 +104,9 @@ evening.onclick = () => {
   saveToFirebase();
 };
 
-// ✅ Reset at midnight
 setInterval(() => {
   const now = new Date();
   const today = now.toDateString();
-
   if (feeding.date !== today) {
     feeding = {
       morning: false,
@@ -117,7 +117,6 @@ setInterval(() => {
   }
 }, 60000);
 
-// ✅ 18:00 reminder
 setInterval(() => {
   const now = new Date();
   if (now.getHours() === 18 && now.getMinutes() === 0) {
@@ -135,4 +134,3 @@ setInterval(() => {
 
 </body>
 </html>
-``
