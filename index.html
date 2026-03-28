@@ -36,56 +36,103 @@ button {
 <button id="morning">AAMU</button>
 <button id="evening">ILTA</button>
 
-<script>
-// 🔁 haetaan tallennettu tila
-let data = JSON.parse(localStorage.getItem("feeding")) || {
-  morning:false,
-  evening:false,
+<!-- ✅ Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue } 
+  from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
+// ✅ Your firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyDaPyc0p0Mqqt6zY4ZcI-dk2PpL4AMnw9g",
+  authDomain: "koira-ruokinta.firebaseapp.com",
+  databaseURL: "https://koira-ruokinta-default-rtdb.firebaseio.com",
+  projectId: "koira-ruokinta",
+  storageBucket: "koira-ruokinta.firebasestorage.app",
+  messagingSenderId: "625228203495",
+  appId: "1:625228203495:web:d6dc81cf694dcc40636942",
+  measurementId: "G-18BCRT569S"
+};
+
+// ✅ Init Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ✅ References in database
+const dbRef = ref(db, "feeding");
+
+// ✅ Local state (mirror from Firebase)
+let feeding = {
+  morning: false,
+  evening: false,
   date: new Date().toDateString()
 };
 
-// 🔄 reset jos uusi päivä
-if (data.date !== new Date().toDateString()) {
-  data = { morning:false, evening:false, date:new Date().toDateString() };
+// ✅ Update button colours
+function updateUI() {
+  document.getElementById("morning").className =
+      feeding.morning ? "green" : "red";
+
+  document.getElementById("evening").className =
+      feeding.evening ? "green" : "red";
 }
 
-// UI päivitys
-function update() {
-  morning.className = data.morning ? "green" : "red";
-  evening.className = data.evening ? "green" : "red";
+// ✅ Send state to Firebase
+function saveToFirebase() {
+  set(dbRef, feeding);
 }
 
-// tallennus
-function save() {
-  localStorage.setItem("feeding", JSON.stringify(data));
-}
+// ✅ Sync from Firebase (REALTIME!)
+onValue(dbRef, (snapshot) => {
+  const val = snapshot.val();
+  if (!val) return;
 
-// toggle
+  feeding = val;
+  updateUI();
+});
+
+// ✅ Button handlers
 morning.onclick = () => {
-  data.morning = !data.morning;
-  save();
-  update();
+  feeding.morning = !feeding.morning;
+  saveToFirebase();
 };
 
 evening.onclick = () => {
-  data.evening = !data.evening;
-  save();
-  update();
+  feeding.evening = !feeding.evening;
+  saveToFirebase();
 };
 
-// 🔔 klo 18 muistutus
+// ✅ Reset at midnight
+setInterval(() => {
+  const now = new Date();
+  const today = now.toDateString();
+
+  if (feeding.date !== today) {
+    feeding = {
+      morning: false,
+      evening: false,
+      date: today
+    };
+    saveToFirebase();
+  }
+}, 60000);
+
+// ✅ 18:00 reminder
 setInterval(() => {
   const now = new Date();
   if (now.getHours() === 18 && now.getMinutes() === 0) {
-    if (!data.morning || !data.evening) {
+    if (!feeding.morning || !feeding.evening) {
       alert("RUOKINTA!");
+      const audio = new Audio(
+        "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+      );
+      audio.play();
     }
   }
 }, 60000);
 
-// käynnistys
-update();
 </script>
 
 </body>
 </html>
+``
