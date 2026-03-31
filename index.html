@@ -18,7 +18,6 @@ h1 {
   font-size:40px;
 }
 
-/* ✅ Koirakuva, 2× koko */
 #dog {
   width:300px;
   margin-top:10px;
@@ -41,40 +40,28 @@ button {
 
 <body>
 
-<h1>  RUOKINTA</h1>
+<h1>RUOKINTA</h1>
 
-<!-- ✅ KOIRAKUVA -->
 <img id="dog" src="https://akoljo77.github.io/koira-ruokinta/koira.png" alt="koira">
 
 <button id="morning">AAMU</button>
 <button id="evening">ILTA</button>
 
-<!-- ✅ Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getDatabase, ref, set, onValue }
   from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDaPyc0p0Mqqt6zY4ZcI-dk2PpL4AMnw9g",
+  apiKey: "AIzaSy...",
   authDomain: "koira-ruokinta.firebaseapp.com",
   databaseURL: "https://koira-ruokinta-default-rtdb.firebaseio.com",
   projectId: "koira-ruokinta",
-  storageBucket: "koira-ruokinta.firebasestorage.app",
-  messagingSenderId: "625228203495",
-  appId: "1:625228203495:web:d6dc81cf694dcc40636942",
-  measurementId: "G-18BCRT569S"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const dbRef = ref(db, "feeding");
-
-let feeding = {
-  morning: false,
-  evening: false,
-  date: new Date().toDateString()
-};
 
 function updateUI() {
   document.getElementById("morning").className =
@@ -84,17 +71,26 @@ function updateUI() {
     feeding.evening ? "green" : "red";
 }
 
+let feeding = {
+  morning: false,
+  evening: false,
+  date: 0
+};
+
 function saveToFirebase() {
   set(dbRef, feeding);
 }
 
+// 🔥 Kuuntele Firebasea
 onValue(dbRef, (snapshot) => {
   const val = snapshot.val();
   if (!val) return;
+
   feeding = val;
   updateUI();
 });
 
+// Napit
 document.getElementById("morning").onclick = () => {
   feeding.morning = !feeding.morning;
   saveToFirebase();
@@ -105,49 +101,33 @@ document.getElementById("evening").onclick = () => {
   saveToFirebase();
 };
 
-// ✅ Puolenyön resetointi
-setInterval(() => {
-  const now = new Date();
-  const today = now.toDateString();
-  if (feeding.date !== today) {
-    feeding = { morning:false, evening:false, date:today };
-    saveToFirebase();
-  }
-}, 60000);
 
-
-// ✅ Uusi LUOTETTAVA hälytyskoodi klo 18
+// 🔔 Hälytys klo 18
 let alertedToday = false;
 
 function checkAlert() {
   const now = new Date();
 
-  // Nollaa varoitus uuden päivän alussa
   if (now.getHours() === 0 && now.getMinutes() === 0) {
     alertedToday = false;
   }
 
-  // Hälytys klo 18 (vain kerran päivässä)
   if (now.getHours() === 18 && !alertedToday) {
     if (!feeding.morning || !feeding.evening) {
       alertedToday = true;
 
       alert("RUOKINTA!");
 
-      // ✅ Aito, kuuluva hälytysääni
       const audio = new Audio(
         "https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg"
       );
-      audio.volume = 1.0;
       audio.play();
     }
   }
 }
 
-// ✅ Tarkistus 5 sek välein (toimii paljon luotettavammin kuin minuttitarkistus)
 setInterval(checkAlert, 5000);
 
-// ✅ Tarkista hälytys myös, jos appi herää taustalta
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
     checkAlert();
